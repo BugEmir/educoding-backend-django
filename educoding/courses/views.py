@@ -73,8 +73,13 @@ class SectorGroupingCourse(APIView): #{
 #}
 
 
-#class SearchCourse(APIView):
-  #  def get(provide, request, searchString):
-        #matches = 
-        #searchbar afmaken 
-        # serializer maken voor searchbar
+# Search class toegevoegd (zonder Serializer)
+class SearchCourse(APIView): #{
+    def get(self, request, searchWords_lookup_from_q): #{
+        #print(searchWords_lookup_from_q)
+        matches = Course.objects.filter(Q(title__icontains=searchWords_lookup_from_q) | Q(desc__icontains=searchWords_lookup_from_q))
+        #print(matches)
+        serialized = CourseListSerializer(matches, many = True)
+        return Response(data = serialized.data, status = status.HTTP_200_OK)
+        #}
+#}
