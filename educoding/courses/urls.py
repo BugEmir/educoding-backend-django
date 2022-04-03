@@ -11,4 +11,6 @@ urlpatterns = [
     path('information/<uuid:courseUUID>/', CourseInstruct.as_view()),
     #cursussen in sectoren ophalen endpoint route (Course Lijst)
     path('<uuid:sectorUUID>/', SectorGroupingCourse.as_view()),
+    # search functie van course lijst endpoint
+    path('search/<str:searchWords_lookup_from_q>/', SearchCourse.as_view())
 ]
