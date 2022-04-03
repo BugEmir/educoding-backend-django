@@ -1,6 +1,6 @@
 from django.urls import path
 from django.urls import include
-from courses.views import CoursesHub, CourseInstruct, SectorGroupingCourse
+from courses.views import CoursesHub, CourseInstruct, SectorGroupingCourse, SearchCourse
 
 # EduCoding Routing schema
 
