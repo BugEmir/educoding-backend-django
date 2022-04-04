@@ -48,6 +48,18 @@ class EpisodeUnpaidSerializer(ModelSerializer): #{
         #}
     
     #}
+    
+class EpisodeActivatedSerializer(ModelSerializer): #{
+    length = serializers.CharField(source='capture_video_time')
+    class Meta: #{
+        model = EpisodeCourse
+        fields = [
+            'file',
+            'length',
+            'title'
+        ]
+
+    #}
 
 
 class CourseSectionUnPaidSerializer(ModelSerializer): #{
@@ -62,6 +74,20 @@ class CourseSectionUnPaidSerializer(ModelSerializer): #{
         ]
         #}
     #}
+    
+class CourseSectionActivatedSerializer(ModelSerializer): #{
+    episodeData = EpisodeActivatedSerializer(many=True)
+    complete_HR_VID_MAX = serializers.CharField(source='total_length')
+    class Meta: #{
+        model = CourseSection
+        fields = [
+            'sectionTitle',
+            'episodeData',
+            'complete_HR_VID_MAX',
+        ]    
+        #}
+#}
+
 
 class StudentUnpaidSerializer(ModelSerializer): #{
     # als je geen ManytoManyField wilt gebruiken zet many=False
@@ -79,6 +105,27 @@ class StudentUnpaidSerializer(ModelSerializer): #{
             'id'
         ]
     #}
+#}
+
+
+
+class CourseActivatedSerializer(ModelSerializer): #{
+    # als je geen ManytoManyField wilt gebruiken zet many=False
+    comments = CommentSerializer(many=True)
+    author = userSerializer()
+    courseSectionData = CourseSectionActivatedSerializer(many=True)
+    studentID = serializers.IntegerField(source='capture_paid_student')
+    completeLessons = serializers.IntegerField(source='capture_total_lessons')
+    completeDuration = serializers.CharField(source='available_course_length')
+    image = serializers.CharField(source='capture_full_image_url')
+
+    class Meta: #{
+        model = Course
+        exclude = [
+            'id'
+        ]
+    
+
 #}
 
 
