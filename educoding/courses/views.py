@@ -1,12 +1,23 @@
-from django.http import HttpResponseBadRequest
+from nis import match
+from django.http import HttpResponseBadRequest, HttpResponseNotAllowed
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status 
+from rest_framework import status
+from simplejson import JSONDecodeError 
 from courses.models import Course, Sector
+from users.models import User
+from .dataserializers import CommentSerializer
 from .dataserializers import CourseViewSerializer
 from .dataserializers import StudentUnpaidSerializer
 from .dataserializers import CourseListSerializer
+from .dataserializers import ProductSerializer
+from .dataserializers import CourseActivatedSerializer
+from django.db.models import Q
+from decimal import Decimal
+
+import json
+import time
 
 
 # EduCoding views index
@@ -82,4 +93,103 @@ class SearchCourse(APIView): #{
         serialized = CourseListSerializer(matches, many = True)
         return Response(data = serialized.data, status = status.HTTP_200_OK)
         #}
+#}
+
+
+
+class CommentOnCourse(APIView): #{
+    def post(self, request, courseUUID): #{
+        try:
+            course = Course.objects.get(courseUUID = courseUUID)
+        except Course.DoesNotExist:
+            return HttpResponseBadRequest("Cursus bestaat nog niet.")
+        try:
+            courseContent = json.loads(request.body)
+        except json.decoder.JSONDecodeError:
+            return Response("Plaats een reactie", status = status.HTTP_400_BAD_REQUEST)
+
+        #courseContent = json.loads(request.body)
+
+        if not courseContent.get('message'):
+            return Response(status = status.HTTP_400_BAD_REQUEST)
+        
+        serialized = CommentSerializer(data = courseContent)
+
+        if serialized.is_valid():
+            # nog geen authenticatie systeem
+            author = User.objects.get(id=1)
+            comments = serialized.save(user = author)
+            #comment = serialized.save(user = request.user)
+            course.comments.add(comments)
+            return Response(status = status.HTTP_201_CREATED)
+        else:
+            return Response(data = serialized.errors, status = status.HTTP_400_BAD_REQUEST)
+
+        #}
+    
+    #}
+
+# CaptureBagDetail
+class CaptureBagDetail(APIView): #{
+    def post(self, request): #{
+        try:
+            body_data = json.loads(request.body)
+        except json.decoder.JSONDecodeError:
+            return HttpResponseBadRequest()
+
+        if type(body_data.get('cart')) != list: #{
+            return HttpResponseBadRequest()
+        #}
+
+        if len(body_data.get('cart')) == 0: #{
+            return Response([])
+        #}
+
+        coursesList = []
+        for x in body_data.get('cart'): #{
+            cartItem = Course.objects.filter(courseUUID = x)
+            
+            if not cartItem:
+                return HttpResponseBadRequest()
+            coursesList.append(cartItem[0])
+
+        serialized = ProductSerializer(coursesList, many = True)
+        totalCalculateCart = Decimal(0.00)
+        #}
+        for x in serialized.data:
+            totalCalculateCart += Decimal(x.get('price'))
+        return Response(data = {
+            'cartInfo':serialized.data,
+            'totalCalculateCart':totalCalculateCart
+        }, status = status.HTTP_200_OK)
+            
+    #}
+
+#}
+
+
+class CourseView(APIView): #{
+    def get(self, request, courseUUID): #{
+        try:
+            course = Course.objects.get(courseUUID = courseUUID)
+        except Course.DoesNotExist:
+            return HttpResponseBadRequest("Cursus bestaat (nog) niet.")
+
+        
+        request.user = User.objects.get(id=1)
+      
+        # idk of dit werkt met user.* en filteren met course UUID
+        userCourseActivated = request.user.courseActivated.filter(courseUUID = courseUUID)
+        
+        if not userCourseActivated:
+            return HttpResponseNotAllowed("U heeft deze cursus niet gekocht.")
+        # hmm onthoud deze
+        serialized = CourseActivatedSerializer(course)
+        
+        return Response(serialized.data, status.HTTP_200_OK)
+        
+    #}
+            
+    
+
 #}
