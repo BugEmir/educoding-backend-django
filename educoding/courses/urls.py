@@ -1,6 +1,12 @@
 from django.urls import path
 from django.urls import include
-from courses.views import CoursesHub, CourseInstruct, SectorGroupingCourse, SearchCourse
+from courses.views import CoursesHub 
+from courses.views import CourseInstruct
+from courses.views import SearchCourse 
+from courses.views import SectorGroupingCourse
+from courses.views import CommentOnCourse
+from courses.views import CaptureBagDetail
+from courses.views import CourseView
 
 # EduCoding Routing schema
 
@@ -13,4 +19,10 @@ urlpatterns = [
     path('<uuid:sectorUUID>/', SectorGroupingCourse.as_view()),
     # search functie van course lijst endpoint
     path('search/<str:searchWords_lookup_from_q>/', SearchCourse.as_view())
+    # comment op cursus endpoint
+    path('comment/<courseUUID>/', CommentOnCourse.as_view()),
+    # winkelwagen endpoint
+    path('bag/', CaptureBagDetail.as_view()),
+    # Course check endpoint
+    path('study/<uuid:courseUUID>/', CourseView.as_view())
 ]
